@@ -1,0 +1,24 @@
+{
+    "name": "whatsapp-bot",
+    "version": "1.0.0",
+    "description": "Simple WhatsApp bot using Venom-Bot",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "@google/genai": "^0.12.0",
+        "@google/generative-ai": "^0.24.1",
+        "@hapi/boom": "^10.0.1",
+        "dotenv": "^16.5.0",
+        "qrcode-terminal": "^0.12.0",
+        "venom-bot": "^5.3.0",
+        "whatsapp-bot": "file:"
+    },
+    "resolutions": {
+        "puppeteer": "^24.8.0"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}
