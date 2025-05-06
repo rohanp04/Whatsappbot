@@ -19,12 +19,20 @@ async function start(client) {
     try {
       const text = message.body;
 
-      if (text.includes('@luffy')) {
-        // Skip input checks or cleanup — send entire message as-is to Gemini
-        const aiResponse = await askGemini(text);  // full message including @echo
-        await client.sendText(message.from, aiResponse);
-        console.log(aiResponse);
+      if (message.isGroupMsg && message.body && message.body.includes('@vibe')) {
+        try {
+          const aiResponse = await askGemini(text);
+          if (typeof aiResponse === 'string' && aiResponse.trim() !== '') {
+            await client.sendText(message.from, aiResponse);
+          } else {
+            await client.sendText(message.from, "Kuch samajh nahi aaya 🤔");
+          }
+        } catch (err) {
+          console.error("Failed to handle group @vibe:", err);
+          await client.sendText(message.from, "Kuch gadbad ho gayi re 😵");
+        }
       }
+      
     
     } catch (err) {
       console.error("Error when sending AI response:", err);
