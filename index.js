@@ -4,81 +4,64 @@ const { askGemini } = require('./gemini');
 
 venom
   .create({
-    session: 'luffy-bot',
-    headless: true,
+    session: 'connection',
+    headless: false,
     browserArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'],
-    executablePath: 'C://Program Files//Google//Chrome//Application//chrome.exe',
+    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // adjust if needed
   })
   .then((client) => start(client))
-  .catch((error) => {
-    console.error('Error starting Venom:', error);
+  .catch((erro) => {
+    console.error('Error starting Venom:', erro);
   });
 
-async function start(client) {
-  console.log('Bot successfully started!');
+  const groupChatContext = {}; // key: chatId, value: array of last 30 messages
+
+  async function start(client) {
+    client.onMessage(async (message) => {
+      try {
+        const chatId = message.chatId;
+        const msgBody = message.body;
   
-  client.onMessage(async (message) => {
-    try {
-      // Check if message and message.body exist
-      if (!message || !message.body) {
-        console.log('Received message with no body');
-        return;
-      }
-
-      const fullText = message.body;
-
-      // Check if message includes @luffy (case insensitive)
-      if (fullText.toLowerCase().includes('@luffy')) {
-        console.log(`Received message with tag: ${fullText}`);
-        
-        // Extract only the query part after "@luffy"
-        // This regex looks for "@luffy" (case insensitive) and captures everything after it
-        const match = fullText.match(/@luffy\s*(.*)/i);
-        
-        // If we have a match and there's content after "@luffy"
-        if (match && match[1]) {
-          const queryText = match[1].trim();
-          console.log(`Extracted query: "${queryText}"`);
-          
-          // Skip if there's nothing after the tag
-          if (!queryText) {
-            console.log('Empty query after tag, skipping');
-            return;
-          }
-          
-          try {
-            // Get AI response using only the extracted query
-            const aiResponse = await askGemini(queryText);
-            
-            // Check if we have a valid response
-            if (aiResponse) {
-              // Send the response back to WhatsApp
-              await client.sendText(message.from, aiResponse);
-              console.log(`Response sent: ${aiResponse}`);
-            } else {
-              console.error("No response received from Gemini");
-              await client.sendText(message.from, "Sorry, I couldn't think of a response!");
-            }
-          } catch (aiError) {
-            console.error("Error when getting AI response:", aiError);
-            await client.sendText(message.from, "Oops! My brain froze. Try again later?");
-          }
-        } else {
-          console.log('Tag found but no query text after it');
-          await client.sendText(message.from, "Haan bolo, kya chahiye?");
+        // Skip if message is empty or not from a group
+        if (!message.isGroupMsg || !msgBody) return;
+  
+        // Initialize context array for this group if not already
+        if (!groupChatContext[chatId]) {
+          groupChatContext[chatId] = [];
+  
+          // Load earlier messages to prefill context
+          const earlierMessages = await client.loadEarlierMessages(chatId);
+          const pastBodies = Array.isArray(earlierMessages)
+            ? earlierMessages.map(msg => msg.body).filter(Boolean)
+            : []; // fallback if it's not an array
+          // filter out empty ones
+  
+          groupChatContext[chatId].push(...pastBodies.slice(-30));
         }
-      }
-    } catch (err) {
-      console.error("Error processing message:", err);
-    }
-  });
   
-  // Handle reconnection if disconnected
-  client.onStateChange((state) => {
-    console.log(`Bot state: ${state}`);
-    if (state === 'CONFLICT' || state === 'DISCONNECTED') {
-      console.log('Attempting to reconnect...');
-      client.useHere();
-    }
-  });
-}
+        // Append current message
+        groupChatContext[chatId].push(msgBody);
+  
+        // Maintain only last 30 messages
+        if (groupChatContext[chatId].length > 30) {
+          groupChatContext[chatId].shift();
+        }
+        console.log(groupChatContext[chatId]);
+  
+        // Handle @luffy trigger
+        if (msgBody.includes('@luffy')) {
+          const context = groupChatContext[chatId].join('\n');
+          const prompt = `Group context:\n${context}\n\nUser: ${msgBody}\nBot:`;
+        
+          const aiResponse = await askGemini(prompt);
+          const response = aiResponse?.trim() || "Kuch samajh nahi aaya 🤔";
+        
+          await client.sendText(message.from, response);
+        }
+        
+      } catch (err) {
+        console.error("Error handling message:", err);
+        await client.sendText(message.from, "Kuch gadbad ho gayi re 😵");
+      }
+    });
+  }
