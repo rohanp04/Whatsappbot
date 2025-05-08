@@ -1,0 +1,108 @@
+// const express = require('express');
+// const path = require('path');
+// const venom = require('venom-bot');
+// const bodyParser = require('body-parser');
+// const cors = require('cors');
+
+// const app = express();
+// const PORT = 3000;
+
+// let latestBase64Qr = '';
+
+// app.use(cors({
+//   origin: 'http://127.0.0.1:5500'
+// }));
+
+// app.get('/qr', (req, res) => {
+//   if (!latestBase64Qr) {
+//     return res.json({ qr: null });
+//   }
+//   res.json({ qr: latestBase64Qr });
+// });
+
+// app.listen(PORT, () => {
+//   console.log(`🔗 Visit http://localhost:${PORT} to view the QR code`);
+// });
+
+// venom
+//   .create(
+//     'connection',
+//     (base64Qr, asciiQR) => {
+//       console.log(asciiQR);
+//       latestBase64Qr = base64Qr;
+//     },
+//     undefined,
+//     {
+//       headless: false,
+//       logQR: false,
+//       browserArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--headless=new'],
+//       executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+//     }
+//   )
+//   .then((client) => start(client))
+//   .catch((erro) => {
+//     console.error('Error starting Venom:', erro);
+//   });
+
+//   const groupChatContext = {}; // key: chatId, value: array of last 30 messages
+
+//   const allowedGroups = new Set([
+//     'Testing' // <-- replace with your actual WhatsApp group name
+//   ]);
+  
+//   async function start(client) {
+//     client.onMessage(async (message) => {
+//       try {
+//         const chatId = message.chatId;
+//         const msgBody = message.body;
+  
+//         // Skip if message is empty or not from a group
+//         if (!message.isGroupMsg || !msgBody) return;
+  
+//         // Fetch group metadata to get name
+//         const chat = await client.getChatById(chatId);
+//         const groupName = chat.name;
+  
+//         // Block messages from groups not in the allowed list
+//         if (!allowedGroups.has(groupName)) {
+//           console.log(`❌ Ignored message from unapproved group: ${groupName}`);
+//           return;
+//         }else{
+//           if (!groupChatContext[chatId]) {
+//             groupChatContext[chatId] = [];
+    
+//             const earlierMessages = await client.loadEarlierMessages(chatId);
+//             const pastBodies = Array.isArray(earlierMessages)
+//               ? earlierMessages.map(msg => msg.body).filter(Boolean)
+//               : [];
+    
+//             groupChatContext[chatId].push(...pastBodies.slice(-30));
+//           }
+    
+//           // Append current message
+//           groupChatContext[chatId].push(msgBody);
+    
+//           // Maintain only last 30 messages
+//           if (groupChatContext[chatId].length > 30) {
+//             groupChatContext[chatId].shift();
+//           }
+    
+//           // Handle @vibe trigger
+//           if (msgBody.includes('@vibe')) {
+//             const context = groupChatContext[chatId].join('\n');
+//             const prompt = `Group context:\n${context}\n\nUser: ${msgBody}\nBot:`;
+    
+//             const aiResponse = await askGemini(prompt);
+//             const response = aiResponse?.trim() || "Kuch samajh nahi aaya 🤔";
+    
+//             await client.sendText(message.from, response);
+//           }
+//         }
+//         // Initialize context array for this group if not alrea
+  
+//       } catch (err) {
+//         console.error("Error handling message:", err);
+//         await client.sendText(message.from, "Kuch gadbad ho gayi re 😵");
+//       }
+//     });
+//   }

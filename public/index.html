@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WhatsApp AI Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    #qr {
+      max-width: 300px;
+      margin-top: 20px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin: 5px;
+    }
+    .remove-btn {
+      margin-left: 10px;
+      background-color: red;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Scan QR to Connect WhatsApp</h1>
+
+  <div id="qr-container">
+    <p>Loading QR code...</p>
+  </div>
+
+  <hr />
+
+  <h2>Allowed Groups</h2>
+  <ul id="group-list"></ul>
+
+  <input type="text" id="group" placeholder="Enter group name" />
+  <button onclick="addGroup()">Add Group</button>
+
+  <script>
+    async function fetchQR() {
+      const res = await fetch('http://localhost:3000/qr');
+      const data = await res.json();
+      const container = document.getElementById('qr-container');
+      if (data.qr) {
+        container.innerHTML = `<img id="qr" src="${data.qr}" alt="QR Code" />`;
+      } else {
+        container.innerHTML = "<p>Waiting for QR Code...</p>";
+      }
+    }
+
+    async function loadGroups() {
+      const res = await fetch('http://localhost:3000/groups');
+      const data = await res.json();
+      const list = document.getElementById('group-list');
+      list.innerHTML = '';
+      data.groups.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '❌';
+        delBtn.className = 'remove-btn';
+        delBtn.onclick = () => deleteGroup(name);
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    async function addGroup() {
+      const name = document.getElementById('group').value.trim();
+      if (!name) return alert('Enter a group name');
+      await fetch('http://localhost:3000/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      document.getElementById('group').value = '';
+      loadGroups();
+    }
+
+    async function deleteGroup(name) {
+      await fetch(`http://localhost:3000/groups/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+      loadGroups();
+    }
+
+    fetchQR();
+    loadGroups();
+    setInterval(fetchQR, 5000);
+  </script>
+</body>
+</html>
