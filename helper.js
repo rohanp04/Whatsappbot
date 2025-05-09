@@ -31,7 +31,7 @@ async function createPollFromMessage(client, message) {
       }
   
       const result = await client.sendPollCreation(chatId, poll);
-      console.log("📊 Poll created:", result);
+      // console.log("📊 Poll created:", result);
     } catch (err) {
       console.error("❌ Failed to parse/send poll:", err);
       await client.sendText(chatId, "❌ Failed to create poll due to format error.");

@@ -1,9 +1,11 @@
-const { askGemini } = require('./gemini');  
+const { askGemini } = require('./gemini');
+const { ContextaskGemini } = require('./geminicontext');  
 const venom = require('venom-bot');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { createPollFromMessage } = require('./helper');
+const {searchBing} = require('./bingSearch'); // Import the search function
 
 const app = express();
 const port = 3000;
@@ -17,6 +19,9 @@ let clientInstance = null;
 let allowedGroupName = ''; // Group name allowed by user
 
 const groupChatContext = {}; // chatId => [last 30 messages]
+
+const searchCounts = {}; // chatId => number of searches
+const MAX_SEARCHES_PER_GROUP = 10;
 
 venom
 .create(
@@ -125,7 +130,7 @@ async function start(client) {
   
       // ✅ Maintain rolling context of last 30 messages
       groupChatContext[chatId].push(msgBody);
-      if (groupChatContext[chatId].length > 30) {
+      if (groupChatContext[chatId].length == 30) {
         groupChatContext[chatId].shift();
       }
 
@@ -158,13 +163,42 @@ async function start(client) {
         }
         return;
       }
+
+      // 🎯 Handle web search via Gemini response
+      if (msgBody.toLowerCase().startsWith('@vibe search:')) {
+        const chatId = message.chatId;
+      
+        // Initialize or increment search count
+        if (!searchCounts[chatId]) searchCounts[chatId] = 0;
+        if (searchCounts[chatId] >= MAX_SEARCHES_PER_GROUP) {
+          await client.sendText(chatId, "🚫 Your group has reached the 10 search limit.");
+          return;
+        }
+      
+        // Proceed with search
+        const query = msgBody.replace(/@vibe search:/i, '').trim();
+        if (!query) {
+          await client.sendText(chatId, "❓ Please provide a search query.");
+          return;
+        }
+      
+        const rawResult = await searchBing(query);
+        const enhanced = await askGemini(` this was the query of the user Query: ${query}\n\n the result after the web search Raw Result: "${rawResult}"\n\nEnrigh this response with your way of thinking.`);
+      
+        await client.sendText(chatId, enhanced?.trim() || rawResult);
+      
+        searchCounts[chatId] += 1; // Increment count
+        return;
+      }
+      
   
       // ✅ Only respond when bot is mentioned
       if (msgBody.includes('@vibe')) {
         const context = groupChatContext[chatId].join('\n');
-        const prompt = `Group context:\n${context}\n\nUser: ${msgBody}\nBot:`;
+        const grpContext = `Group context:\n${context}\n`;
+        const prompt = `User: ${msgBody}`;
   
-        const aiResponse = await askGemini(prompt);
+        const aiResponse = await ContextaskGemini(grpContext,prompt);
         const response = aiResponse?.trim() || 'Kuch samajh nahi aaya 🤔';
   
         await client.sendText(message.from, response);
