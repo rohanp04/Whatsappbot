@@ -5,7 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { createPollFromMessage } = require('./helper');
-const {searchBing} = require('./bingSearch'); // Import the search function
+const webSearch = require('./web-search'); // Import the web-search module
 
 const app = express();
 const port = 3000;
@@ -98,6 +98,42 @@ app.listen(port, () => {
   console.log(`🌐 Server running on http://localhost:${port}`);
 });
 
+/**
+ * Perform web search and format results for WhatsApp
+ * @param {string} query - Search query
+ * @returns {Promise<string>} - Formatted search results
+ */
+async function performWebSearch(query) {
+  try {
+    // Use the search function from web-search module
+    const searchResults = await webSearch.search(query, {
+      maxResults: 3,
+      includeContent: true
+    });
+    
+    if (searchResults.status === "error" || searchResults.results.length === 0) {
+      return `🔍 No results found for: "${query}"`;
+    }
+    
+    // Format results for WhatsApp message
+    let formattedResults = `🔍 *Search Results for "${query}"*\n\n`;
+    
+    searchResults.results.forEach((result, index) => {
+      formattedResults += `*${index + 1}. ${result.title}*\n`;
+      formattedResults += `${result.snippet}\n`;
+      formattedResults += `🔗 ${result.url}\n\n`;
+    });
+    
+    formattedResults += "───────────────\n";
+    formattedResults += "Powered by @vibe search";
+    
+    return formattedResults;
+  } catch (error) {
+    console.error('Search error:', error);
+    return `❌ Error searching for "${query}": ${error.message}`;
+  }
+}
+
 // WhatsApp listener
 async function start(client) {
   client.onMessage(async (message) => {
@@ -130,7 +166,7 @@ async function start(client) {
   
       // ✅ Maintain rolling context of last 30 messages
       groupChatContext[chatId].push(msgBody);
-      if (groupChatContext[chatId].length == 30) {
+      if (groupChatContext[chatId].length > 30) {
         groupChatContext[chatId].shift();
       }
 
@@ -159,12 +195,12 @@ async function start(client) {
           const generatedMessage = { ...message, body: generatedPollCommand };
           await createPollFromMessage(client, generatedMessage);
         } else {
-          await client.sendText(message.chatId, "⚠️ Couldn’t generate a valid poll from your message.");
+          await client.sendText(message.chatId, "⚠️ Couldn't generate a valid poll from your message.");
         }
         return;
       }
 
-      // 🎯 Handle web search via Gemini response
+      // 🎯 Handle web search via new search module
       if (msgBody.toLowerCase().startsWith('@vibe search:')) {
         const chatId = message.chatId;
       
@@ -175,22 +211,47 @@ async function start(client) {
           return;
         }
       
-        // Proceed with search
+        // Extract query and perform search
         const query = msgBody.replace(/@vibe search:/i, '').trim();
         if (!query) {
           await client.sendText(chatId, "❓ Please provide a search query.");
           return;
         }
-      
-        const rawResult = await searchBing(query);
-        const enhanced = await askGemini(` this was the query of the user Query: ${query}\n\n the result after the web search Raw Result: "${rawResult}"\n\nEnrigh this response with your way of thinking.`);
-      
-        await client.sendText(chatId, enhanced?.trim() || rawResult);
-      
-        searchCounts[chatId] += 1; // Increment count
+        
+        // Send typing indicator
+        await client.startTyping(chatId);
+        
+        // First get raw search results
+        const searchResults = await performWebSearch(query);
+        
+        // Then enhance with Gemini if possible
+        try {
+          const enhanced = await askGemini(
+            `This was the user's query: "${query}"\n\n` +
+            `These are the search results:\n${searchResults}\n\n` +
+            `Based on these search results and consider it carefully, provide a accurate and concise summary that answers the query.` +'Only if it is very important to the asking query Focus on the most relevant information. Include 2-3 key points from the results.' +
+            `\n\n` +
+            +
+            `Format your response nicely for WhatsApp (using *bold* where appropriate). Keep it under 400 words.`
+          );
+          
+          if (enhanced?.trim()) {
+            await client.sendText(chatId, enhanced.trim());
+          } else {
+            await client.sendText(chatId, searchResults);
+          }
+        } catch (geminiError) {
+          // Fallback to raw results if Gemini fails
+          console.error('Gemini enhancement error:', geminiError);
+          await client.sendText(chatId, searchResults);
+        }
+        
+        // Stop typing indicator
+        
+        // Increment search count
+        searchCounts[chatId] += 1;
         return;
       }
-      
   
       // ✅ Only respond when bot is mentioned
       if (msgBody.includes('@vibe')) {
@@ -198,21 +259,14 @@ async function start(client) {
         const grpContext = `Group context:\n${context}\n`;
         const prompt = `User: ${msgBody}`;
   
-        const aiResponse = await ContextaskGemini(grpContext,prompt);
+        const aiResponse = await ContextaskGemini(grpContext, prompt);
         const response = aiResponse?.trim() || 'Kuch samajh nahi aaya 🤔';
   
         await client.sendText(message.from, response);
       }
-
-      
-  
     } catch (err) {
       console.error("Error handling message:", err);
       await client.sendText(message.from, "Kuch gadbad ho gayi re 😵");
     }
   });
 }
-
-
-
-  

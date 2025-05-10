@@ -1,25 +1,23 @@
-// ai-web-search.js - Search the web and use Gemini AI to format accurate answers
+/**
+ * web-search.js - Module for searching the web and returning results
+ * 
+ * This module provides functions to search the web using various sources
+ * and return formatted results without Gemini AI processing.
+ */
+
 const axios = require('axios');
-const readline = require('readline');
 const cheerio = require('cheerio');
 
-// Set your Google Gemini API Key here
-// Get one from: https://aistudio.google.com/app/apikey
-const GEMINI_API_KEY = 'AIzaSyA3KHon93R-v9EY9pTjzmhbZDH8ly2bU9E';
-
-// Create readline interface for terminal input/output
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
 /**
- * Function to search the web using multiple sources
+ * Search the web using multiple sources
  * @param {string} query - The search query
- * @returns {Promise<Array>} - Combined search results
+ * @param {Object} options - Search options
+ * @returns {Promise<Object>} - Search results object
  */
-async function searchWeb(query) {
+async function search(query, options = {}) {
   try {
+    const maxResults = options.maxResults || 5;
+    const includeContent = options.includeContent || false;
     const results = [];
     
     // Get results from DuckDuckGo
@@ -34,14 +32,46 @@ async function searchWeb(query) {
     //   results.push(...bingResults);
     // }
     
-    return results;
+    // If we need to include content, fetch detailed content
+    let resultsWithContent = results.slice(0, maxResults);
+    
+    if (includeContent && resultsWithContent.length > 0) {
+      const contentPromises = resultsWithContent.map(async (result) => {
+        try {
+          const content = await getPageContent(result.url);
+          return {
+            ...result,
+            content
+          };
+        } catch (error) {
+          console.error(`Error fetching content for URL ${result.url}:`, error.message);
+          return {
+            ...result,
+            content: ''
+          };
+        }
+      });
+      
+      resultsWithContent = await Promise.all(contentPromises);
+    }
+    
+    return {
+      status: 'success',
+      query,
+      results: resultsWithContent
+    };
   } catch (error) {
     console.error('Error searching the web:', error.message);
-    return [];
+    return {
+      status: 'error',
+      query,
+      results: [],
+      error: error.message
+    };
   }
 }
 
-/** 
+/**
  * Search DuckDuckGo
  * @param {string} query - The search query
  * @returns {Promise<Array>} - Search results
@@ -97,7 +127,7 @@ async function searchDuckDuckGo(query) {
 }
 
 /**
- * Function to get more detailed information from a specific URL
+ * Get detailed information from a specific URL
  * @param {string} url - The URL to scrape
  * @returns {Promise<string>} - The extracted content
  */
@@ -145,7 +175,7 @@ async function getPageContent(url) {
       .replace(/\n+/g, '\n')
       .trim();
     
-    return content.substring(0, 3000); // Limit to 3000 chars to avoid overloading Gemini
+    return content.substring(0, 3000); // Limit to 3000 chars
   } catch (error) {
     console.error(`Error fetching content from ${url}:`, error.message);
     return '';
@@ -153,121 +183,21 @@ async function getPageContent(url) {
 }
 
 /**
- * Get content from top search results
- * @param {Array} searchResults - Search results
- * @param {Number} maxResults - Max number of results to process
- * @returns {Promise<Array>} - Array of result contents
- */
-async function getTopResultsContent(searchResults, maxResults =10) {
-  const topResults = searchResults.slice(0, maxResults);
-  const contentPromises = topResults.map(async (result) => {
-    const content = await getPageContent(result.url);
-    return {
-      title: result.title,
-      url: result.url,
-      content: content
-    };
-  });
-  
-  return Promise.all(contentPromises);
-
-}
-
-/**
- * Use Gemini API to generate an accurate answer
- * @param {string} query - The original query
- * @param {Array} resultContents - Content from top search results
- * @returns {Promise<string>} - The AI-generated answer
- */
-async function generateAnswer(query, resultContents) {
-  // Check if this is a time-sensitive query (like "today")
-  const isTimeSensitive = query.toLowerCase().includes('today') || 
-                          query.toLowerCase().includes('happening now') ||
-                          query.toLowerCase().includes('current') ||
-                          query.toLowerCase().match(/what'?s\s+(on|happening)/i);
-  
-  const today = new Date();
-  const formatDate = today.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  }); // e.g., "Saturday, May 10, 2025"
-  try {
-    // Build prompt for Gemini
-    let prompt = `Question: ${query}\n\n`;
-    
-    if (isTimeSensitive) {
-      prompt += `Note: This is a time-sensitive query about today (${formatDate}). Ensure the information is specific to this date.\n\n`;
-    }
-    
-    prompt += "I've gathered information from multiple web sources. Please provide a comprehensive, accurate answer based on the following information:\n\n";
-    
-    resultContents.forEach((result, index) => {
-      prompt += `Source ${index + 1}: ${result.title}\nURL: ${result.url}\n\n`;
-      prompt += `${result.content.substring(0, 1000)}...\n\n`;
-    });
-    
-    prompt += "Please synthesize this information to provide a clear, accurate, and well-structured answer to the question. Include relevant facts and details. Format the answer nicely with proper headings, lists, and paragraphs where appropriate. Cite sources when possible.";
-    
-    if (isTimeSensitive) {
-      prompt += "\n\nVery important: If the information seems outdated or doesn't specifically mention today's date, please note this in your answer. Start your response with 'As of today, " + formatDate + "' and then provide the most current information available from the sources."
-    }
-    
-    // Call Gemini API
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048
-        }
-      }
-    );
-    
-    // Extract and return the generated answer
-    if (response.data && 
-        response.data.candidates && 
-        response.data.candidates[0] && 
-        response.data.candidates[0].content && 
-        response.data.candidates[0].content.parts && 
-        response.data.candidates[0].content.parts[0]) {
-      return response.data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error("Unexpected API response structure");
-    }
-  } catch (error) {
-    console.error('Error generating answer with Gemini:', error.message);
-    if (error.response) {
-      console.error('API response:', error.response.data);
-    }
-    return "I couldn't generate an AI answer due to an error. Here's the information I found:\n\n" + 
-           resultContents.map(r => `${r.title}\n${r.url}\n${r.content.substring(0, 200)}...\n`).join('\n');
-  }
-}
-
-/**
- * Format search results for display
- * @param {Array} results - The search results
+ * Format search results as a string
+ * @param {Array} results - Search results array
+ * @param {Object} options - Formatting options
  * @returns {string} - Formatted results string
  */
-function formatSearchResults(results) {
+function formatResults(results, options = {}) {
+  const { maxResults = 10, query = '' } = options;
+  
   if (!results || results.length === 0) {
-    return "No results found.";
+    return `No results found for: "${query}"`;
   }
   
-  let output = "Top search results:\n\n";
+  let output = `🔍 Search Results for "${query}"\n\n`;
   
-  results.slice(0, 5).forEach((result, index) => {
+  results.slice(0, maxResults).forEach((result, index) => {
     output += `${index + 1}. ${result.title}\n`;
     output += `   ${result.snippet}\n`;
     output += `   Source: ${result.url}\n\n`;
@@ -276,110 +206,27 @@ function formatSearchResults(results) {
   return output;
 }
 
-/**
- * Main function to run the search tool
- */
-async function main() {
-  console.log("🔍 AI-Enhanced Web Search Terminal");
-  console.log("==================================");
-  console.log("Type your question or 'exit' to quit");
-  console.log("TIP: For time-sensitive queries, I'll automatically add today's date (May 10, 2025)");
-  
-  let lastResults = null;
-  
-  const askQuestion = async () => {
-    rl.question('\n❓ What would you like to know? ', async (input) => {
-      if (input.toLowerCase() === 'exit') {
-        console.log('👋 Goodbye!');
-        rl.close();
-        return;
-      }
-      
-      // Check if the query is about something happening "today"
-      let searchQuery = input;
-      if (input.toLowerCase().includes('today') || 
-          input.toLowerCase().includes('happening now') ||
-          input.toLowerCase().includes('current') ||
-          input.toLowerCase().match(/what'?s\s+(on|happening)/i)) {
-        
-        // Get today's date in different formats
-        const today = new Date();
-        const dateString = today.toDateString(); // e.g., "Sat May 10 2025"
-        const formatDate = today.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        }); // e.g., "May 10, 2025"
-        
-        // Add the date to the query
-        searchQuery = input.replace(/today|happening now|current/i, formatDate);
-        if (searchQuery === input) { // If no replacement was made, add the date
-          searchQuery = `${input} on ${formatDate}`;
-        }
-        
-        console.log(`\n🕒 I'll search for information about "${input}" for today (${formatDate})`);
-      }
-      
-      console.log(`\n🔎 Searching for: "${searchQuery}"`);
-      console.log('🕒 Please wait...');
-      
-      // 1. Search the web
-      const searchResults = await searchWeb(searchQuery);
-      lastResults = searchResults;
-      
-      if (!searchResults || searchResults.length === 0) {
-        console.log("❌ No search results found.");
-        askQuestion();
-        return;
-      }
-      
-      // 2. Fetch detailed content from top results
-      console.log('📄 Gathering detailed information...');
-      const topResultsContent = await getTopResultsContent(searchResults, 3);
-      
-      // 3. Generate answer with Gemini
-      console.log('🧠 Analyzing content and generating answer...');
-      const aiAnswer = await generateAnswer(input, topResultsContent);
-      
-      // 4. Display the answer
-      console.log('\n=========== AI-ENHANCED ANSWER ===========');
-      console.log(aiAnswer);
-      console.log('==========================================');
-      
-      // 5. Also show the original search results
-      console.log('\n');
-      console.log(formatSearchResults(searchResults));
-      
-      askQuestion(); // Ask another question
-    });
+// For time-sensitive queries
+function getFormattedDate() {
+  const today = new Date();
+  return {
+    short: today.toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric',
+      year: 'numeric' 
+    }),
+    full: today.toLocaleDateString('en-US', { 
+      weekday: 'long',
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
   };
-  
-  await askQuestion();
 }
 
-// Create package.json
-console.log("Creating package.json...");
-const fs = require('fs');
-const packageJson = {
-  "name": "ai-web-search",
-  "version": "1.0.0",
-  "description": "AI-enhanced web search tool using Gemini AI",
-  "main": "ai-web-search.js",
-  "dependencies": {
-    "axios": "^1.6.2",
-    "cheerio": "^1.0.0-rc.12"
-  },
-  "scripts": {
-    "start": "node ai-web-search.js"
-  }
+module.exports = {
+  search,
+  formatResults,
+  getPageContent,
+  getFormattedDate
 };
-
-fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
-console.log("package.json created successfully.");
-
-// Start the application
-console.log("Starting application...");
-main().catch(error => {
-  console.error('An error occurred:', error);
-  rl.close();
-});
