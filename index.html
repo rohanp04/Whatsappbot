@@ -1,0 +1,394 @@
+
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sai's Birthday Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FDF2F8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #svg-container {
+            width: 100%;
+            max-width: 600px;
+            max-height: 600px;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            z-index: -1;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- SVG Container -->
+    <div id="svg-container">
+        <!-- ADD YOUR SVG CODE HERE -->
+        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Filters for glowing effects -->
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+              </filter>
+              
+              <!-- Candle flame animation -->
+              <radialGradient id="flameGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="#FFFF88"/>
+                <stop offset="80%" stop-color="#FF9933"/>
+                <stop offset="100%" stop-color="#FF5500"/>
+                <animate attributeName="fy" values="50%;40%;50%" dur="2s" repeatCount="indefinite"/>
+              </radialGradient>
+            </defs>
+            
+            <!-- Background with soft gradient -->
+            <rect width="400" height="400" fill="#FDF2F8"/>
+            
+            <!-- Happy Birthday banner - drops in first -->
+            <g>
+              <path id="curve" d="M100,60 Q200,20 300,60" fill="transparent"/>
+              <text font-family="Arial" font-size="18" font-weight="bold" fill="#7B1FA2">
+                <textPath href="#curve" startOffset="50%" text-anchor="middle">Happy Birthday!</textPath>
+                <animate attributeName="fill" values="#7B1FA2;#9C27B0;#7B1FA2" dur="3s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="1s" begin="0s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -100" to="0 0" dur="1.5s" begin="0s" fill="freeze" additive="sum"/>
+              </text>
+            </g>
+            
+            <!-- "SAI" text with animation - drops in second -->
+            <g>
+              <text x="200" y="120" font-family="Arial" font-size="32" font-weight="bold" text-anchor="middle" fill="#FF4081" filter="url(#glow)">
+                SAI
+                <animate attributeName="font-size" values="32;34;32" dur="2s" repeatCount="indefinite" begin="1.5s"/>
+                <animate attributeName="fill" values="#FF4081;#E91E63;#FF4081" dur="3s" repeatCount="indefinite" begin="1.5s"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="1s" begin="1s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -100" to="0 0" dur="1.5s" begin="1s" fill="freeze" additive="sum"/>
+              </text>
+            </g>
+            
+            <!-- Sparkling stars around the text - drops in third -->
+            <g>
+              <path d="M150,100 L152,105 L157,106 L152,108 L151,113 L149,108 L144,106 L149,105 Z" fill="#FFEB3B">
+                <animate attributeName="opacity" values="0;1;0.5;1" dur="2s" begin="2s" repeatCount="indefinite"/>
+                <animateTransform attributeName="transform" type="rotate" from="0 150 106" to="360 150 106" dur="10s" begin="2s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animateTransform attributeName="transform" type="translate" from="0 -100" to="0 0" dur="1s" begin="2s" fill="freeze" additive="sum"/>
+              </path>
+              
+              <path d="M250,100 L252,105 L257,106 L252,108 L251,113 L249,108 L244,106 L249,105 Z" fill="#FFEB3B">
+                <animate attributeName="opacity" values="0;1;0.5;1" dur="2.5s" begin="2.3s" repeatCount="indefinite"/>
+                <animateTransform attributeName="transform" type="rotate" from="0 250 106" to="360 250 106" dur="12s" begin="2.3s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animateTransform attributeName="transform" type="translate" from="0 -100" to="0 0" dur="1s" begin="2.3s" fill="freeze" additive="sum"/>
+              </path>
+              
+              <path d="M200,80 L202,85 L207,86 L202,88 L201,93 L199,88 L194,86 L199,85 Z" fill="#FFEB3B">
+                <animate attributeName="opacity" values="0;1;0.5;1" dur="3s" begin="2.6s" repeatCount="indefinite"/>
+                <animateTransform attributeName="transform" type="rotate" from="0 200 86" to="360 200 86" dur="15s" begin="2.6s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animateTransform attributeName="transform" type="translate" from="0 -100" to="0 0" dur="1s" begin="2.6s" fill="freeze" additive="sum"/>
+              </path>
+            </g>
+            
+            <!-- Hearts floating around - drop in fourth -->
+            <g>
+              <path d="M120,150 C120,140 110,130 100,130 C85,130 85,150 100,160 C115,145 120,140 120,150 Z" fill="#FF80AB">
+                <animate attributeName="transform" type="translate" values="0,0; 5,5; 0,0" dur="2s" begin="4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;0.8;1;0.8" dur="2s" begin="3s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animateTransform attributeName="transform" type="translate" from="0 -150" to="0 0" dur="1.5s" begin="3s" fill="freeze" additive="sum"/>
+              </path>
+              
+              <path d="M280,140 C280,130 270,120 260,120 C245,120 245,140 260,150 C275,135 280,130 280,140 Z" fill="#FF80AB">
+                <animate attributeName="transform" type="translate" values="0,0; -5,5; 0,0" dur="2.2s" begin="4.3s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;0.8;1;0.8" dur="2.2s" begin="3.3s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animateTransform attributeName="transform" type="translate" from="0 -150" to="0 0" dur="1.5s" begin="3.3s" fill="freeze" additive="sum"/>
+              </path>
+            </g>
+            
+            <!-- Cake stand - drops in fifth -->
+            <ellipse cx="200" cy="320" rx="120" ry="20" fill="#FFE0B2" stroke="#FFCC80" stroke-width="2">
+              <animate attributeName="rx" values="120;125;120" dur="2s" begin="5s" repeatCount="indefinite"/>
+              <!-- Drop in animation -->
+              <animate attributeName="opacity" values="0;1" dur="1s" begin="4s" fill="freeze"/>
+              <animateTransform attributeName="transform" type="translate" from="0 -100" to="0 0" dur="1s" begin="4s" fill="freeze"/>
+            </ellipse>
+            
+            <!-- First (bottom) cake layer - drops in sixth -->
+            <g>
+              <path d="M100,290 Q200,310 300,290 L300,250 Q200,270 100,250 Z" fill="#F48FB1" stroke="#EC407A" stroke-width="2">
+                <animate attributeName="d" values="M100,290 Q200,310 300,290 L300,250 Q200,270 100,250 Z;M100,292 Q200,312 300,292 L300,252 Q200,272 100,252 Z;M100,290 Q200,310 300,290 L300,250 Q200,270 100,250 Z" dur="2s" begin="6s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="1s" begin="5s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.5s" begin="5s" fill="freeze"/>
+              </path>
+              
+              <!-- Decorations on first layer -->
+              <circle cx="120" cy="270" r="5" fill="#F8BBD0">
+                <animate attributeName="r" values="5;6;5" dur="1s" begin="6.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="6s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="6s" fill="freeze"/>
+              </circle>
+              <circle cx="160" cy="275" r="5" fill="#F8BBD0">
+                <animate attributeName="r" values="5;6;5" dur="1.2s" begin="6.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="6.1s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="6.1s" fill="freeze"/>
+              </circle>
+              <circle cx="200" cy="280" r="5" fill="#F8BBD0">
+                <animate attributeName="r" values="5;6;5" dur="0.9s" begin="6.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="6.2s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="6.2s" fill="freeze"/>
+              </circle>
+              <circle cx="240" cy="275" r="5" fill="#F8BBD0">
+                <animate attributeName="r" values="5;6;5" dur="1.3s" begin="6.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="6.3s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="6.3s" fill="freeze"/>
+              </circle>
+              <circle cx="280" cy="270" r="5" fill="#F8BBD0">
+                <animate attributeName="r" values="5;6;5" dur="1.1s" begin="6.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="6.4s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="6.4s" fill="freeze"/>
+              </circle>
+            </g>
+            
+            <!-- Second cake layer - drops in seventh -->
+            <g>
+              <path d="M120,250 Q200,270 280,250 L280,220 Q200,240 120,220 Z" fill="#90CAF9" stroke="#42A5F5" stroke-width="2">
+                <animate attributeName="d" values="M120,250 Q200,270 280,250 L280,220 Q200,240 120,220 Z;M120,252 Q200,272 280,252 L280,222 Q200,242 120,222 Z;M120,250 Q200,270 280,250 L280,220 Q200,240 120,220 Z" dur="2s" begin="8s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="1s" begin="7s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.5s" begin="7s" fill="freeze"/>
+              </path>
+              
+              <!-- Decorations on second layer -->
+              <circle cx="140" cy="235" r="4" fill="#BBDEFB">
+                <animate attributeName="r" values="4;5;4" dur="1.3s" begin="8.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="8s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="8s" fill="freeze"/>
+              </circle>
+              <circle cx="200" cy="245" r="4" fill="#BBDEFB">
+                <animate attributeName="r" values="4;5;4" dur="1s" begin="8.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="8.1s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="8.1s" fill="freeze"/>
+              </circle>
+              <circle cx="260" cy="235" r="4" fill="#BBDEFB">
+                <animate attributeName="r" values="4;5;4" dur="1.2s" begin="8.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="8.2s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="8.2s" fill="freeze"/>
+              </circle>
+            </g>
+            
+            <!-- Third (top) cake layer - drops in eighth -->
+            <g>  
+              <path d="M140,220 Q200,235 260,220 L260,190 Q200,205 140,190 Z" fill="#AED581" stroke="#7CB342" stroke-width="2">
+                <animate attributeName="d" values="M140,220 Q200,235 260,220 L260,190 Q200,205 140,190 Z;M140,222 Q200,237 260,222 L260,192 Q200,207 140,192 Z;M140,220 Q200,235 260,220 L260,190 Q200,205 140,190 Z" dur="2s" begin="10s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="1s" begin="9s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.5s" begin="9s" fill="freeze"/>
+              </path>
+              
+              <!-- Decorations on third layer -->
+              <circle cx="160" cy="205" r="4" fill="#DCEDC8">
+                <animate attributeName="r" values="4;5;4" dur="1.1s" begin="10.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="10s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="10s" fill="freeze"/>
+              </circle>
+              <circle cx="200" cy="210" r="4" fill="#DCEDC8">
+                <animate attributeName="r" values="4;5;4" dur="0.9s" begin="10.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="10.1s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="10.1s" fill="freeze"/>
+              </circle>
+              <circle cx="240" cy="205" r="4" fill="#DCEDC8">
+                <animate attributeName="r" values="4;5;4" dur="1.2s" begin="10.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="10.2s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="10.2s" fill="freeze"/>
+              </circle>
+            </g>
+            
+            <!-- Candles with animated flames - drop in ninth -->
+            <g>
+              <!-- Candle 1 -->
+              <rect x="160" y="170" width="6" height="20" rx="2" fill="#FFE082" stroke="#FFD54F" stroke-width="1">
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="11s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="11s" fill="freeze"/>
+              </rect>
+              <ellipse cx="163" cy="170" rx="3" ry="1" fill="#FFD54F">
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="11s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="11s" fill="freeze"/>
+              </ellipse>
+              <path d="M163,170 Q165,163 163,160 Q161,163 163,170" fill="url(#flameGradient)" filter="url(#glow)">
+                <animate attributeName="d" values="M163,170 Q165,163 163,160 Q161,163 163,170;M163,170 Q166,162 163,158 Q160,162 163,170;M163,170 Q165,163 163,160 Q161,163 163,170" dur="0.8s" begin="11.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="11.3s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="11.3s" fill="freeze"/>
+              </path>
+              
+              <!-- Candle 2 -->
+              <rect x="197" y="165" width="6" height="25" rx="2" fill="#FFE082" stroke="#FFD54F" stroke-width="1">
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="11.5s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="11.5s" fill="freeze"/>
+              </rect>
+              <ellipse cx="200" cy="165" rx="3" ry="1" fill="#FFD54F">
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="11.5s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="11.5s" fill="freeze"/>
+              </ellipse>
+              <path d="M200,165 Q202,158 200,155 Q198,158 200,165" fill="url(#flameGradient)" filter="url(#glow)">
+                <animate attributeName="d" values="M200,165 Q202,158 200,155 Q198,158 200,165;M200,165 Q203,157 200,153 Q197,157 200,165;M200,165 Q202,158 200,155 Q198,158 200,165" dur="0.9s" begin="12s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="11.8s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="11.8s" fill="freeze"/>
+              </path>
+              
+              <!-- Candle 3 -->
+              <rect x="235" y="170" width="6" height="20" rx="2" fill="#FFE082" stroke="#FFD54F" stroke-width="1">
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="12s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="12s" fill="freeze"/>
+              </rect>
+              <ellipse cx="238" cy="170" rx="3" ry="1" fill="#FFD54F">
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="12s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="12s" fill="freeze"/>
+              </ellipse>
+              <path d="M238,170 Q240,163 238,160 Q236,163 238,170" fill="url(#flameGradient)" filter="url(#glow)">
+                <animate attributeName="d" values="M238,170 Q240,163 238,160 Q236,163 238,170;M238,170 Q241,162 238,158 Q235,162 238,170;M238,170 Q240,163 238,160 Q236,163 238,170" dur="1s" begin="12.5s" repeatCount="indefinite"/>
+                <!-- Drop in animation -->
+                <animate attributeName="opacity" values="0;1" dur="0.8s" begin="12.3s" fill="freeze"/>
+                <animateTransform attributeName="transform" type="translate" from="0 -200" to="0 0" dur="1.2s" begin="12.3s" fill="freeze"/>
+              </path>
+            </g>
+            
+            <!-- Confetti animation - starts falling last -->
+            <g class="confetti">
+              <!-- Pink confetti -->
+              <circle cx="50" cy="-10" r="5" fill="#FF80AB">
+                <animate attributeName="cy" from="-10" to="410" dur="4s" begin="13s" repeatCount="indefinite"/>
+                <animate attributeName="cx" values="50;65;40;55;50" dur="4s" begin="13s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;1" dur="0.5s" begin="13s" fill="freeze"/>
+              </circle>
+              
+              <!-- Yellow confetti -->
+              <rect x="150" y="-5" width="8" height="8" fill="#FFEB3B" transform="rotate(45)">
+                <animate attributeName="y" from="-5" to="410" dur="5s" begin="13.2s" repeatCount="indefinite"/>
+                <animate attributeName="x" values="150;165;145;160;150" dur="5s" begin="13.2s" repeatCount="indefinite"/>
+                <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" begin="13.2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;1" dur="0.5s" begin="13.2s" fill="freeze"/>
+              </rect>
+              
+              <!-- Blue confetti -->
+              <polygon points="250,0 255,5 250,10 245,5" fill="#64B5F6">
+                <animate attributeName="points" values="250,0 255,5 250,10 245,5;250,5 255,10 250,15 245,10" dur="0.5s" begin="13.4s" repeatCount="indefinite" />
+                <animate attributeName="cy" from="-10" to="410" dur="3.5s" begin="13.4s" repeatCount="indefinite"/>
+                <animate attributeName="cx" values="250;235;255;240;250" dur="3.5s" begin="13.4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;1" dur="0.5s" begin="13.4s" fill="freeze"/>
+              </polygon>
+              
+              <!-- Green confetti -->
+              <circle cx="320" cy="-15" r="6" fill="#81C784">
+                <animate attributeName="cy" from="-15" to="410" dur="4.5s" begin="13.6s" repeatCount="indefinite"/>
+                <animate attributeName="cx" values="320;310;330;315;320" dur="4.5s" begin="13.6s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;1" dur="0.5s" begin="13.6s" fill="freeze"/>
+              </circle>
+              
+              <!-- Purple confetti -->
+              <rect x="100" y="-8" width="7" height="7" fill="#BA68C8">
+                <animate attributeName="y" from="-8" to="410" dur="3.8s" begin="13.8s" repeatCount="indefinite"/>
+                <animate attributeName="x" values="100;110;95;105;100" dur="3.8s" begin="13.8s" repeatCount="indefinite"/>
+                <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="3.8s" begin="13.8s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0;1" dur="0.5s" begin="13.8s" fill="freeze"/>
+              </rect>
+            </g>
+          </svg>
+    </div>
+
+    <!-- Video Container -->
+    <div id="video-container">
+        <video autoplay loop muted>
+            <source src="trimmed_video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            const svgContainer = document.getElementById('svg-container');
+            const videoContainer = document.getElementById('video-container');
+            const video = document.querySelector('video');
+    
+            // Make sure the video doesn't loop
+            video.loop = false; // Disable looping
+    
+            // Show video after 5 seconds and hide SVG
+            setTimeout(function () {
+                svgContainer.style.opacity = '0';
+                videoContainer.style.opacity = '1';
+                videoContainer.style.zIndex = '1';
+                video.play();
+            }, 5000);
+    
+            // When the video ends, show the SVG again and stop the video
+            video.addEventListener('ended', function () {
+                videoContainer.style.opacity = '0';
+                videoContainer.style.zIndex = '-1';
+                svgContainer.style.opacity = '1';
+                
+                // Stop the video from playing
+                video.pause();
+                video.currentTime = 0; // Reset video to the start
+            });
+    
+            // On SVG click, play the video again
+            svgContainer.addEventListener('click', function () {
+                svgContainer.style.opacity = '0';
+                videoContainer.style.opacity = '1';
+                videoContainer.style.zIndex = '1';
+                video.play();
+            });
+        });
+    </script>
+    
+    
+    
+</body>
+</html>
