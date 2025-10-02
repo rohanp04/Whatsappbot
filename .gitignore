@@ -3,3 +3,5 @@ chrome
 node_modules
 tokens
 .env
+.wwebjs_cache
+.wwebjs_auth

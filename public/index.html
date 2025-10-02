@@ -1,106 +1,495 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>WhatsApp AI Bot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 30px;
-    }
-    #qr {
-      max-width: 300px;
-      margin-top: 20px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    li {
-      margin: 5px;
-    }
-    .remove-btn {
-      margin-left: 10px;
-      background-color: red;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 5px solid #28a745;
+            transition: all 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .status-loading { background-color: #ffc107; }
+
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .qr-code {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .groups-section {
+            margin-top: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title:before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .group-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .group-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .group-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+
+        .groups-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .group-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .group-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .group-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            margin: 40px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            color: #6c757d;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .group-form {
+                flex-direction: column;
+            }
+            
+            .group-input {
+                min-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Scan QR to Connect WhatsApp</h1>
+    <div class="container">
+        <div class="header">
+            <h1>🤖Vibe WhatsApp Bot</h1>
+            <p>Manage your AI-powered WhatsApp bot with ease</p>
+        </div>
 
-  <div id="qr-container">
-    <p>Loading QR code...</p>
-  </div>
+        <div class="status-card">
+            <h3>
+                <span id="statusIndicator" class="status-indicator status-loading"></span>
+                Bot Status: <span id="statusText">Connecting...</span>
+            </h3>
+            <p id="statusDesc">Initializing bot connection...</p>
+        </div>
 
-  <hr />
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <div class="feature-title">Smart Chat</div>
+                <div class="feature-desc">Context-aware conversations with 30-message memory using Gemini AI</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Polls Creation</div>
+                <div class="feature-desc">Create interactive polls directly from chat messages</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Web Search</div>
+                <div class="feature-desc">Real-time web search with AI-enhanced responses</div>
+            </div>
+        </div>
 
-  <h2>Allowed Groups</h2>
-  <ul id="group-list"></ul>
+        <div id="qrSection" class="qr-section" style="display: none;">
+            <h3>📱 Scan QR Code to Connect</h3>
+            <p>Open WhatsApp on your phone and scan this QR code</p>
+            <br>
+            <img id="qrCode" class="qr-code" alt="QR Code" />
+        </div>
 
-  <input type="text" id="group" placeholder="Enter group name" />
-  <button onclick="addGroup()">Add Group</button>
+        <div class="groups-section">
+            <h2 class="section-title">📱 Allowed Groups</h2>
+            
+            <div class="group-form">
+                <input 
+                    type="text" 
+                    id="groupInput" 
+                    class="group-input" 
+                    placeholder="Enter group name to allow..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button onclick="addGroup()" class="btn btn-primary">
+                    <span id="addBtnText">Add Group</span>
+                </button>
+                <button onclick="refreshGroups()" class="btn btn-success">
+                    <span id="refreshBtnText">🔄 Refresh</span>
+                </button>
+            </div>
 
-  <script>
-    async function fetchQR() {
-      const res = await fetch('http://localhost:3000/qr');
-      const data = await res.json();
-      const container = document.getElementById('qr-container');
-      if (data.qr) {
-        container.innerHTML = `<img id="qr" src="${data.qr}" alt="QR Code" />`;
-      } else {
-        container.innerHTML = "<p>Waiting for QR Code...</p>";
-      }
-    }
+            <div id="groupsList" class="groups-list">
+                <!-- Groups will be loaded here -->
+            </div>
+        </div>
+    </div>
 
-    async function loadGroups() {
-      const res = await fetch('http://localhost:3000/groups');
-      const data = await res.json();
-      const list = document.getElementById('group-list');
-      list.innerHTML = '';
-      data.groups.forEach(name => {
-        const li = document.createElement('li');
-        li.textContent = name;
-        const delBtn = document.createElement('button');
-        delBtn.textContent = '❌';
-        delBtn.className = 'remove-btn';
-        delBtn.onclick = () => deleteGroup(name);
-        li.appendChild(delBtn);
-        list.appendChild(li);
-      });
-    }
+    <script>
+        let statusCheckInterval;
 
-    async function addGroup() {
-      const name = document.getElementById('group').value.trim();
-      if (!name) return alert('Enter a group name');
-      await fetch('http://localhost:3000/groups', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      document.getElementById('group').value = '';
-      loadGroups();
-    }
+        async function checkStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                
+                const statusIndicator = document.getElementById('statusIndicator');
+                const statusText = document.getElementById('statusText');
+                const statusDesc = document.getElementById('statusDesc');
+                const qrSection = document.getElementById('qrSection');
+                
+                if (data.ready) {
+                    statusIndicator.className = 'status-indicator status-online';
+                    statusText.textContent = 'Connected & Ready';
+                    statusDesc.textContent = '✅ Bot is online and monitoring allowed groups';
+                    qrSection.style.display = 'none';
+                } else if (data.hasQr) {
+                    statusIndicator.className = 'status-indicator status-loading';
+                    statusText.textContent = 'Waiting for QR Scan';
+                    statusDesc.textContent = '📱 Please scan the QR code with your WhatsApp';
+                    await loadQRCode();
+                } else {
+                    statusIndicator.className = 'status-indicator status-loading';
+                    statusText.textContent = 'Connecting...';
+                    statusDesc.textContent = '🔄 Establishing connection with WhatsApp Web';
+                    qrSection.style.display = 'none';
+                }
+            } catch (error) {
+                const statusIndicator = document.getElementById('statusIndicator');
+                const statusText = document.getElementById('statusText');
+                const statusDesc = document.getElementById('statusDesc');
+                
+                statusIndicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Connection Error';
+                statusDesc.textContent = '❌ Unable to connect to bot server';
+            }
+        }
 
-    async function deleteGroup(name) {
-      await fetch(`http://localhost:3000/groups/${encodeURIComponent(name)}`, {
-        method: 'DELETE'
-      });
-      loadGroups();
-    }
+        async function loadQRCode() {
+            try {
+                const response = await fetch('/qr');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.qr) {
+                        document.getElementById('qrCode').src = data.qr;
+                        document.getElementById('qrSection').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading QR code:', error);
+            }
+        }
 
-    fetchQR();
-    loadGroups();
-    setInterval(fetchQR, 5000);
-  </script>
+        async function loadGroups() {
+            try {
+                const response = await fetch('/groups');
+                const data = await response.json();
+                
+                const groupsList = document.getElementById('groupsList');
+                groupsList.innerHTML = '';
+                
+                if (data.groups.length === 0) {
+                    groupsList.innerHTML = '<p style="color: #6c757d; text-align: center; grid-column: 1 / -1;">No groups allowed yet. Add some groups to get started!</p>';
+                } else {
+                    data.groups.forEach(group => {
+                        const groupDiv = document.createElement('div');
+                        groupDiv.className = 'group-item';
+                        groupDiv.innerHTML = `
+                            <span class="group-name">${group}</span>
+                            <button onclick="removeGroup('${group}')" class="btn btn-danger" style="padding: 8px 12px; font-size: 14px;">
+                                Remove
+                            </button>
+                        `;
+                        groupsList.appendChild(groupDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading groups:', error);
+            }
+        }
+
+        async function addGroup() {
+            const input = document.getElementById('groupInput');
+            const groupName = input.value.trim();
+            const addBtn = document.getElementById('addBtnText');
+            
+            if (!groupName) {
+                alert('Please enter a group name');
+                return;
+            }
+            
+            addBtn.innerHTML = '<div class="loading"></div>';
+            
+            try {
+                const response = await fetch('/groups', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: groupName }),
+                });
+                
+                if (response.ok) {
+                    input.value = '';
+                    await loadGroups();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Error adding group:', error);
+                alert('Failed to add group');
+            } finally {
+                addBtn.textContent = 'Add Group';
+            }
+        }
+
+        async function removeGroup(groupName) {
+            if (!confirm(`Are you sure you want to remove "${groupName}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/groups/${encodeURIComponent(groupName)}`, {
+                    method: 'DELETE',
+                });
+                
+                if (response.ok) {
+                    await loadGroups();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.error}`);
+                }
+            } catch (error) {
+                console.error('Error removing group:', error);
+                alert('Failed to remove group');
+            }
+        }
+
+        async function refreshGroups() {
+            const refreshBtn = document.getElementById('refreshBtnText');
+            refreshBtn.innerHTML = '<div class="loading"></div>';
+            
+            try {
+                await loadGroups();
+            } finally {
+                refreshBtn.textContent = '🔄 Refresh';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addGroup();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            loadGroups();
+            statusCheckInterval = setInterval(checkStatus, 3000);
+        });
+    </script>
 </body>
 </html>
